@@ -62,7 +62,11 @@ public class IngredientController {
         //init uom
         ingredientCommand.setUom(new UnitOfMeasureCommand());
 
-        model.addAttribute("uomList",  unitOfMeasureService.listAllUoms());
+        // runs here. service lists all the uoms.
+        // we need to run collect lists and when we do the block, the request goes to MongoDB.
+        // comes back, goes through the converter and gets converted then gets collected as a list
+        // then is passed back into our view layer.
+        model.addAttribute("uomList",  unitOfMeasureService.listAllUoms().collectList().block());
 
         return "recipe/ingredient/ingredientform";
     }
