@@ -168,6 +168,6 @@ public class IngredientServiceImpl implements IngredientService {
         } else {
             log.debug("Recipe Id Not found. Id:" + recipeId);
         }
-        return Mono.empty();
+        return Mono.empty(); // must have this instead of returning null or an NPE error may occur.
     }
 }
