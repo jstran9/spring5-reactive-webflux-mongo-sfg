@@ -12,6 +12,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 
 /**
  * Created by jt on 6/28/17.
@@ -68,12 +69,6 @@ public class IngredientController {
         //init uom
         ingredientCommand.setUom(new UnitOfMeasureCommand());
 
-        // runs here. service lists all the uoms.
-        // we need to run collect lists and when we do the block, the request goes to MongoDB.
-        // comes back, goes through the converter and gets converted then gets collected as a list
-        // then is passed back into our view layer.
-        model.addAttribute("uomList", unitOfMeasureService.listAllUoms());
-
         return "recipe/ingredient/ingredientform";
     }
 
@@ -82,13 +77,11 @@ public class IngredientController {
                                          @PathVariable String id, Model model){
         model.addAttribute("ingredient", ingredientService.findByRecipeIdAndIngredientId(recipeId, id).block());
 
-        model.addAttribute("uomList", unitOfMeasureService.listAllUoms());
         return "recipe/ingredient/ingredientform";
     }
 
     @PostMapping("recipe/{recipeId}/ingredient")
-    public String saveOrUpdate(@ModelAttribute("ingredient") IngredientCommand command,
-                               Model model){
+    public String saveOrUpdate(@ModelAttribute("ingredient") IngredientCommand command){
 
         webDataBinder.validate();
         BindingResult bindingResult = webDataBinder.getBindingResult();
@@ -99,7 +92,6 @@ public class IngredientController {
                 log.debug(objectError.toString());
             });
 
-            model.addAttribute("uomList", unitOfMeasureService.listAllUoms());
             return "recipe/ingredient/ingredientform";
         }
 
@@ -118,5 +110,11 @@ public class IngredientController {
         ingredientService.deleteById(recipeId, id).block();
 
         return "redirect:/recipe/" + recipeId + "/ingredients";
+    }
+
+    // every request will now populate a property named "uomList" that returns the below.
+    @ModelAttribute("uomList")
+    public Flux<UnitOfMeasureCommand> populateUomList() {
+        return unitOfMeasureService.listAllUoms();
     }
 }
